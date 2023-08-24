@@ -1,14 +1,16 @@
 #include <iostream>
 void tablero(char movimientos[]);
 char victoria(char movimientos[],char simbolo);
-void regMov(char movimientos[],char simbolo);
+int regMov(char movimientos[],char simbolo);
+int autoMov(char movimientos[],char simbolo,int movAnt);
 void test(char movimientos[]);
+
 using namespace std;
 
 //Movimientos se registran en un arreglo tam=9 (uno para cada player o una matriz(tam 2x9) para almacenar los 2)
 int main(){
     char movimientos[9]={'~','~','~','~','~','~','~','~','~'}; // ~ = Sin movimiento registrado | 'X' Movimiento P1 | 'O' Movimiento P2
-    
+    int movAnt=0;
     /*
     tablero(movimientos);
     regMov(movimientos,'O');
@@ -19,7 +21,7 @@ int main(){
 
     tablero(movimientos);
     for(int i=0;i<5;i++){
-        regMov(movimientos,'X');
+        movAnt = regMov(movimientos,'X');
         cout<<"\n\n";
         //tablero(movimientos);
         if(victoria(movimientos,'X')){
@@ -31,7 +33,7 @@ int main(){
             cout<<"\n\nEmpate \n";
             break;
         }
-        regMov(movimientos,'O');
+        movAnt = autoMov(movimientos,'O',movAnt);
         //tablero(movimientos);
         cout<<"\n\n";
         if(victoria(movimientos,'O')){
@@ -54,14 +56,14 @@ void tablero(char movimientos[]){
             if(j%2){
                 cout<<i+j;
             }else{
-                cout<<"|"; 
+                cout<<"|";
             }
         }
         if(i!=2)
             cout<<"\n-----\n";
     }
     */
-    //   
+    //
     for(int i=1;i<10;i++){
         if(movimientos[i-1]!='~')
             cout<<movimientos[i-1];
@@ -76,18 +78,18 @@ void tablero(char movimientos[]){
 }
 
 //ChecarPorVictoriaEnUnTurno(matrizMovimientos)
-char victoria(char movimientos[],char simbolo){ 
+char victoria(char movimientos[],char simbolo){
     //Regresa el simbolo del ganador o algo(por decidir) para que siga el juego
     //Si esta por perder en un turno entonces poner pieza para evitarlo sino entonces ponerla de forma adjacente(a donde lo puso el rival) donde no hayamos ocupado ya esa linea
     //CondiVictoria 1-2-3 | 1-5-9 | 1-4-7 | 2-5-8 | 3-5-7 | 3-6-9 | 4-5-6 | 7-8-9 Si alguno de esos tiene el mismo simbolo entonces WIN para el player del simbolo
     //Lo mismo pero acomodado a pos de arreglo
-    /*CondiVictoria 0-1-2 | 
-                    0-4-8 | 
-                    0-3-6 | 
-                    1-4-7 | 
-                    2-4-6 | 
-                    2-5-8 | 
-                    3-4-5 | 
+    /*CondiVictoria 0-1-2 |
+                    0-4-8 |
+                    0-3-6 |
+                    1-4-7 |
+                    2-4-6 |
+                    2-5-8 |
+                    3-4-5 |
                     6-7-8 Si alguno de esos tiene el mismo simbolo entonces WIN para el player del simbolo*/
 
     //Forma precaria en lo que pienso en como optimizar
@@ -111,20 +113,26 @@ char victoria(char movimientos[],char simbolo){
 }
 
 //registrarMovimiento(movimientos)
-void regMov(char movimientos[],char simbolo){
+int regMov(char movimientos[],char simbolo){
     //Pide la posicion (1-9) y coloca el simbolo(auto o pedira simbolo?) ahi
     int i;
     do{
         cout<<"\nIngrese la posicion (1-9): "<<simbolo<<"\n";
         cin>>i;
     }while(movimientos[i-1]!='~');
-    
+
     movimientos[i-1]=simbolo;
 
     tablero(movimientos);
 }
 
-//Testing
-void test(char movimientos[]){
+//Moverse de forma automatica
+int autoMov(char movimientos[],char simbolo,int movAnt);{
+    //Evalua el movimiento anterior(sino entonces agarra el centro) y envase a eso decide que hacer
+    if(!movAnt){ //Si no hubo movimiento anterior entonces elige el centro
+        movimientos[4]=simbolo;
+        return 5;
+    }
+
 
 }
