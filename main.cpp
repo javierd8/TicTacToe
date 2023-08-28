@@ -1,14 +1,21 @@
 #include <iostream>
+#include <time.h>
+#include <random>
+
 void tablero(char movimientos[]);
 char victoria(char movimientos[],char simbolo);
 int regMov(char movimientos[],char simbolo,int mov);
 int autoMov(char movimientos[],char simbolo,int movAnt);
 int oporWin(char movimientos[],char simbolo);
+int centro(char movimientos[]);
+int cpuMov(char movimientos[],char simbolo);
 
 using namespace std;
 
 //Movimientos se registran en un arreglo tam=9 (uno para cada player o una matriz(tam 2x9) para almacenar los 2)
 int main(){
+    int num=1;
+    while(num++){
     char movimientos[9]={'~','~','~','~','~','~','~','~','~'}; // ~ = Sin movimiento registrado | 'X' Movimiento P1 | 'O' Movimiento P2
     int movAnt=0,movSig=0;
     /*
@@ -21,12 +28,20 @@ int main(){
 
     tablero(movimientos);
     cout<<"\n\n";
-    while(!victoria(movimientos,'O')){
     for(int i=0;i<5;i++){
-        movSig = oporWin(movimientos,'X');
-        movAnt = regMov(movimientos,'X',movSig);
+
+        movSig = cpuMov(movimientos,'X');
+        if(movSig!=-1){
+            regMov(movimientos,'X',movSig);
+        }else{
+            regMov(movimientos,'X',oporWin(movimientos,'O')); 
+        }
+
+        //movAnt = regMov(movimientos,'X',movSig);
+        //cout<<"\n"<<movAnt<<"\n";
         tablero(movimientos);
         cout<<"\n\n";
+
         //cout<<"\nOporW\n"<<oporWin(movimientos,'X');
         if(victoria(movimientos,'X')){
             cout<<"\n\nGanador es: X\n";
@@ -39,12 +54,13 @@ int main(){
         }
 
         movAnt = regMov(movimientos,'O',-1);
-        movSig = oporWin(movimientos,'O');
+        //movSig = oporWin(movimientos,'O');
         //movAnt = autoMov(movimientos,'O',movAnt);
         tablero(movimientos);
         cout<<"\n\n";
         if(victoria(movimientos,'O')){
             cout<<"\n\nGanador es: O\n";
+            num=0;
             break;
         }
 
@@ -55,7 +71,7 @@ int main(){
 
 //nombreFuncion(Parametros)
 
-//Grafico del tablero(matrizMovimientos)
+//Grafico del tablero
 void tablero(char movimientos[]){
     /* Impresion con doble for (Descartado)
     for(int i=0;i<3;i++){
@@ -121,11 +137,16 @@ char victoria(char movimientos[],char simbolo){
 //Registra el movimiento en el tablero con las debidas validaciones
 int regMov(char movimientos[],char simbolo,int mov){
     //Pide la posicion (1-9) y coloca el simbolo ahi
-    if(mov=-1){
-        int i;
-        srand(time(NULL));
-        do{
-            i = rand()%10;
+    if(mov==-1){
+        int i;            
+        do{         
+            //srand(time(0)); //Lento
+            //i = rand()%10;
+            //Mucho mejor que rand()
+            random_device rand;  
+            mt19937 gen(rand());  
+            uniform_int_distribution<>dis(0, 8);  
+            i = dis(gen);  
         }while(movimientos[i]!='~'); //Mientras no sea un espacio en blanco se seguiran sacando randoms hasta que toque uno en blanco
         movimientos[i]=simbolo;
         return i;
@@ -148,7 +169,7 @@ a)Contraataque
 b)Centro
     Tomarlo en el primer turno o cuando se de la oportunidad
 c)Esquina
-    Modo ataque exclusivo //Caso WIN del diagonal casi asegurado
+    Modo ataque exclusivo(?) //Caso WIN del diagonal casi asegurado
         Cuando sea nuestro 2do turno, el otro jugador haya jugado esquina en su 1er turno y tengamos el centro
             en este caso jugamos la esquina opuesta al del otro jugador
                 en caso de que en el sig turno del otro jugador juegue un borde entonces jugamos la esquina opuesta a ese borde
@@ -157,7 +178,7 @@ c)Esquina
     Cuando el otro jugador haya jugado borde y haya fallado el "WIN de linea casi asegurado"
         en este caso jugamos una esquina adyacente al movimiento del otro jugador
 d)Borde
-    Modo ataque exclusivo //Caso WIN de linea casi asegurado
+    Modo ataque exclusivo(?) //Caso WIN de linea casi asegurado
         Cuando sea nuestro 2do turno y el otro jugador haya jugado borde en su 1ro y tengamos el centro
             en este caso jugamos el borde opuesto al del 1er jugador
                 en caso de que en el sig turno del otro jugador juegue un borde entonces jugamos la esquina adyacente a una pieza nuestra
@@ -166,19 +187,35 @@ d)Borde
     Cuando el 1er jugador haya jugado esquina
         en este caso jugamos un borde adyacente al movimiento del 1er jugador
 */
-int autoMov(char movimientos[],char simbolo,int movAnt){
-    //Evalua el movimiento anterior y envase a eso decide que hacer
-    return 0;
+//Lista de movimientos de la IA (o cpu no se como llamarle pero la funcion dice cpu)
+int cpuMov(char movimientos[],char simbolo){
+    int mov=-1;
+    mov = oporWin(movimientos,simbolo);
+    if(mov!=-1)
+        return mov;
+    mov = centro(movimientos);
+    if(mov!=-1)
+        return mov;
+    //esquina
+    if(mov!=-1)
+        return mov;
+    //borde
+    if(mov!=-1)
+        return mov;
+    return mov;
 }
 
-//Checa por una oportunidad de ganar- Retorna posMatriz de la casilla para ganar o -1 si no la hay
+
+
+//Checa por una oportunidad de ganar- Retorna posMatriz de la casilla para ganar o -1 si no la hay (Esta madre se convirtio en contraataque sin querer xd)
 int oporWin(char movimientos[],char simbolo){
-    int contSim=0,contVac=0;
+    int contSim=0,contVac=0,posVac=-1;
     //Checa el tablero en busca de oportunidades de ganar(?)
     //Recorre el tablero contando nuestros simbolos y espacios en blanco, si llega a 2 simbolos y 1 blanco es win sino cont=0 y sig linea
     for(int i=0;i<9;i++){ //Busca en horizontal
         if(movimientos[i]=='~'){ //Checa si es espacio en blanco
             contVac++;
+            posVac=i;
             if(contVac>1){ //Si hay mas 2 espacio entonces sig linea
                 i+=3-contSim-contVac;
             }
@@ -188,8 +225,10 @@ int oporWin(char movimientos[],char simbolo){
             else                        //Sino entonces sig linea
                 i+=2-contSim-contVac;
         }
-        if(contSim==2 && contVac==1)    //Si hay oportunidad de win entonces regresa la pos en la matriz
-            return i;
+        if(contSim==2 && contVac==1){    //Si hay oportunidad de win entonces regresa la pos en la matriz
+            //cout<<"horizontal";
+            return posVac;
+        }
         if(!((i+1)%3)){ //Si es sig linea entonces cont=0
             contSim=0;
             contVac=0;
@@ -200,6 +239,7 @@ int oporWin(char movimientos[],char simbolo){
         for(int j=0;j<3;j++){
             if(movimientos[i+j*3]=='~'){ //Checa si es espacio en blanco
                 contVac++;
+                posVac=i+j*3;
                 if(contVac>1){ //Si hay mas 2 espacio entonces sig linea
                     j+=3-contSim-contVac;
                 }
@@ -209,8 +249,10 @@ int oporWin(char movimientos[],char simbolo){
                 else                        //Sino entonces sig linea
                     j+=2-contSim-contVac;
             }
-            if(contSim==2 && contVac==1)    //Si hay oportunidad de win entonces regresa la pos en la matriz
-                return i+j*3;
+            if(contSim==2 && contVac==1){    //Si hay oportunidad de win entonces regresa la pos en la matriz
+                //cout<<"vertical";
+                return posVac;
+            }
             if(!((j+1)%3)){ //Si es sig linea entonces cont=0
                 contSim=0;
                 contVac=0;
@@ -221,12 +263,13 @@ int oporWin(char movimientos[],char simbolo){
     for(int i=0;i<9;i+=4){ //Busca en diagonal ascendente (?)
         if(movimientos[i]=='~'){ //Checa si es espacio en blanco
                 contVac++;
+                posVac=i;
             }else{
                 if(movimientos[i]==simbolo) //Checa si es simbolo nuesto
                     contSim++;
             }
             if(contSim==2 && contVac==1)    //Si hay oportunidad de win entonces regresa la pos en la matriz
-                return i;
+                return posVac;
     }
 
     contSim=0;
@@ -235,17 +278,36 @@ int oporWin(char movimientos[],char simbolo){
     for(int i=2;i<7;i+=2){ //Busca en diagonal descendente (?) (No se me ocurrio una forma de automatizar jeje)
         if(movimientos[i]=='~'){ //Checa si es espacio en blanco
                 contVac++;
+                posVac=i;
             }else{
                 if(movimientos[i]==simbolo) //Checa si es simbolo nuesto
                     contSim++;
             }
             if(contSim==2 && contVac==1)    //Si hay oportunidad de win entonces regresa la pos en la matriz
-                return i;
+                return posVac;
     }
 
     return -1;
 }
 
-int contraAtaque(){
+//Centro (Nada que decir se explica solo xd)
+int centro(char movimientos[]){
+    if(movimientos[4]=='~')
+        return 4;
+    return -1;
+}
+
+//Si se cumple la condicion jugamos una esquina sino no
+int esquina(char movimientos[]){
+
+}
+
+//Si se cumple la condicion jugamos un borde sino no
+int borde(char movimientos[]){
+    
+}
+
+int autoMov(char movimientos[],char simbolo,int movAnt){
+    //Evalua el movimiento anterior y envase a eso decide que hacer
     return 0;
 }
