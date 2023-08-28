@@ -5,88 +5,64 @@
 void tablero(char movimientos[]);
 char victoria(char movimientos[],char simbolo);
 int regMov(char movimientos[],char simbolo,int mov);
-int autoMov(char movimientos[],char simbolo,int movAnt);
 int oporWin(char movimientos[],char simbolo);
 int centro(char movimientos[]);
-int cpuMov(char movimientos[],char simbolo);
+int cpuMov(char movimientos[],char simbolo,int movAnt,int turno,char simboloContr);
+int esquina(char movimientos[], int movAnt, int turno);
+int borde(char movimientos[], int movAnt, int turno);
 
 using namespace std;
 
 //Movimientos se registran en un arreglo tam=9 (uno para cada player o una matriz(tam 2x9) para almacenar los 2)
 int main(){
-    int num=1;
+    int num=1,win=0,empate=0;
     while(num++){
-    char movimientos[9]={'~','~','~','~','~','~','~','~','~'}; // ~ = Sin movimiento registrado | 'X' Movimiento P1 | 'O' Movimiento P2
-    int movAnt=0,movSig=0;
-    /*
-    tablero(movimientos);
-    regMov(movimientos,'O');
-    cout<<"\n\n";
-    tablero(movimientos);
-    cout<<victoria(movimientos,'O');
-    */
+        char movimientos[9]={'~','~','~','~','~','~','~','~','~'}; // ~ = Sin movimiento registrado | 'X' Movimiento P1 | 'O' Movimiento P2
+        int movAnt=0,movSig=0;
 
-    tablero(movimientos);
-    cout<<"\n\n";
-    for(int i=0;i<5;i++){
-
-        movSig = cpuMov(movimientos,'X');
-        if(movSig!=-1){
-            regMov(movimientos,'X',movSig);
-        }else{
-            regMov(movimientos,'X',oporWin(movimientos,'O')); 
-        }
-
-        //movAnt = regMov(movimientos,'X',movSig);
-        //cout<<"\n"<<movAnt<<"\n";
         tablero(movimientos);
         cout<<"\n\n";
+        for(int i=0;i<5;i++){
 
-        //cout<<"\nOporW\n"<<oporWin(movimientos,'X');
-        if(victoria(movimientos,'X')){
-            cout<<"\n\nGanador es: X\n";
-            break;
+            movSig = cpuMov(movimientos,'X',movAnt,i,'O');
+            movAnt = regMov(movimientos,'X',movSig); 
+
+            tablero(movimientos);
+            cout<<"\n\n";
+
+            if(victoria(movimientos,'X')){
+                cout<<"\n\nGanador es: X\n";
+                win++;
+                break;
+            }
+
+            if(i==4){ //Evita que se jueguen 10 turnos evitando el turno 5 de 'O' y declara empate
+                cout<<"\n\nEmpate \n";
+                empate++;
+                break;
+            }
+
+            //movSig = cpuMov(movimientos,'O',movAnt,i,'X');
+            //movAnt = regMov(movimientos,'O',movSig); 
+
+            movAnt = regMov(movimientos,'O',-1);
+
+            tablero(movimientos);
+            cout<<"\n\n";
+            if(victoria(movimientos,'O')){
+                cout<<"\n\nGanador es: O\n";
+                num=0; //Cuando pierde el 1er jugador el juego se pausa/termina
+                break;
+            }
+
         }
-
-        if(i==4){ //Evita que se jueguen 10 turnos evitando el turno 5 de 'O' y declara empate
-            cout<<"\n\nEmpate \n";
-            break;
-        }
-
-        movAnt = regMov(movimientos,'O',-1);
-        //movSig = oporWin(movimientos,'O');
-        //movAnt = autoMov(movimientos,'O',movAnt);
-        tablero(movimientos);
-        cout<<"\n\n";
-        if(victoria(movimientos,'O')){
-            cout<<"\n\nGanador es: O\n";
-            num=0;
-            break;
-        }
-
-    }}
+    }
 
     return 1;
 }
 
-//nombreFuncion(Parametros)
-
 //Grafico del tablero
 void tablero(char movimientos[]){
-    /* Impresion con doble for (Descartado)
-    for(int i=0;i<3;i++){
-        for(int j=1;j<6;j++){
-            if(j%2){
-                cout<<i+j;
-            }else{
-                cout<<"|";
-            }
-        }
-        if(i!=2)
-            cout<<"\n-----\n";
-    }
-    */
-    //
     for(int i=1;i<10;i++){
         if(movimientos[i-1]!='~')
             cout<<movimientos[i-1];
@@ -136,12 +112,10 @@ char victoria(char movimientos[],char simbolo){
 
 //Registra el movimiento en el tablero con las debidas validaciones
 int regMov(char movimientos[],char simbolo,int mov){
-    //Pide la posicion (1-9) y coloca el simbolo ahi
+    //Si el mov es -1 entonces saca un random sino entonces se registra a donde indica
     if(mov==-1){
         int i;            
         do{         
-            //srand(time(0)); //Lento
-            //i = rand()%10;
             //Mucho mejor que rand()
             random_device rand;  
             mt19937 gen(rand());  
@@ -153,11 +127,10 @@ int regMov(char movimientos[],char simbolo,int mov){
     }else{
         movimientos[mov]=simbolo;
     }
-
     return mov;
 }
 
-//Moverse de forma automatica
+//Jugar de forma automatica
 //Reglas de comportamiento
 /*
 -IA siempre es primer movimiento (primer movimiento = modo ataque)
@@ -187,25 +160,26 @@ d)Borde
     Cuando el 1er jugador haya jugado esquina
         en este caso jugamos un borde adyacente al movimiento del 1er jugador
 */
-//Lista de movimientos de la IA (o cpu no se como llamarle pero la funcion dice cpu)
-int cpuMov(char movimientos[],char simbolo){
+//Lista de movimientos de la IA (o cpu no se como llamarle pero la funcion dira cpu)
+int cpuMov(char movimientos[],char simbolo,int movAnt,int turno,char simboloContr){
     int mov=-1;
-    mov = oporWin(movimientos,simbolo);
+    mov = oporWin(movimientos,simbolo); //Checa por una Win
     if(mov!=-1)
         return mov;
-    mov = centro(movimientos);
+    mov = oporWin(movimientos,simboloContr); //Checa por una Lose
     if(mov!=-1)
         return mov;
-    //esquina
+    mov = centro(movimientos); //Checa para agarrar centro
     if(mov!=-1)
         return mov;
-    //borde
+    mov = esquina(movimientos,movAnt,turno); //Checa para agarrar esquina
+    if(mov!=-1)
+        return mov;
+    mov = borde(movimientos,movAnt,turno); //Checa para agarrar borde
     if(mov!=-1)
         return mov;
     return mov;
 }
-
-
 
 //Checa por una oportunidad de ganar- Retorna posMatriz de la casilla para ganar o -1 si no la hay (Esta madre se convirtio en contraataque sin querer xd)
 int oporWin(char movimientos[],char simbolo){
@@ -298,16 +272,80 @@ int centro(char movimientos[]){
 }
 
 //Si se cumple la condicion jugamos una esquina sino no
-int esquina(char movimientos[]){
+int esquina(char movimientos[], int movAnt, int turno){
+    //Dependiendo del movimiento anterior y el turno actual se juega de una forma u otra
+    //Caso WIN del diagonal
+    /*if(turno<3)
+        if((movAnt+1)%2 && movAnt!=5){ //Checa si es impar(esquina) y que no sea el centro(que tambien es impar)
 
+        }
+    else*/
+        if(!((movAnt+1)%2)) //Checa si es par(borde)
+            switch (movAnt){
+            case 1:
+                if(movimientos[0]=='~')
+                    return 0;
+                if(movimientos[2]=='~')
+                    return 2;
+                break;
+            case 3:
+                if(movimientos[0]=='~')
+                    return 0;
+                if(movimientos[6]=='~')
+                    return 6;
+                break;
+            case 5:
+                if(movimientos[2]=='~')
+                    return 2;
+                if(movimientos[8]=='~')
+                    return 8;
+                break;
+            case 7:
+                if(movimientos[6]=='~')
+                    return 6;
+                if(movimientos[8]=='~')
+                    return 8;
+                break;
+            }
+    return -1;
 }
+
 
 //Si se cumple la condicion jugamos un borde sino no
-int borde(char movimientos[]){
-    
-}
+int borde(char movimientos[], int movAnt, int turno){
+    //Dependiendo del movimiento anterior y el turno actual se juega de una forma u otra
+    //Caso WIN del diagonal
+    /*if(turno<3)
+        if((movAnt+1)%2 && movAnt!=5){ //Checa si es impar(esquina) y que no sea el centro(que tambien es impar)
 
-int autoMov(char movimientos[],char simbolo,int movAnt){
-    //Evalua el movimiento anterior y envase a eso decide que hacer
-    return 0;
+        }
+    else*/
+        if((movAnt+1)%2) //Checa si es impar(esquina)
+            switch (movAnt){
+            case 0:
+                if(movimientos[1]=='~')
+                    return 1;
+                if(movimientos[3]=='~')
+                    return 3;
+                break;
+            case 2:
+                if(movimientos[1]=='~')
+                    return 1;
+                if(movimientos[5]=='~')
+                    return 5;
+                break;
+            case 6:
+                if(movimientos[3]=='~')
+                    return 3;
+                if(movimientos[7]=='~')
+                    return 7;
+                break;
+            case 8:
+                if(movimientos[5]=='~')
+                    return 5;
+                if(movimientos[7]=='~')
+                    return 7;
+                break;
+            }
+    return -1;
 }
