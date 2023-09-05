@@ -51,7 +51,7 @@ int main(){
             cout<<"\n\n";
             if(victoria(movimientos,'O')){
                 cout<<"\n\nGanador es: O\n";
-                num=0; //Cuando pierde el 1er jugador el juego se pausa/termina
+                num=0; //Cuando pierde el 1er jugador el juego se pausa/termina 
                 break;
             }
 
