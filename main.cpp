@@ -13,7 +13,7 @@ int borde(char movimientos[], int movAnt, int turno);
 
 using namespace std;
 
-//Movimientos se registran en un arreglo tam=9 (uno para cada player o una matriz(tam 2x9) para almacenar los 2)
+//Movimientos se registran en un arreglo tam=9
 int main(){
     int num=1,win=0,empate=0;
     while(num++){
@@ -70,7 +70,10 @@ void tablero(char movimientos[]){
         else
             cout<<"~";
         if(!(i%3))
-            (i!=9)?cout<<"\n-----\n":cout<<"" ;
+            if(i!=9)
+                cout<<"\n-----\n";
+            else
+                cout<<"";
         else
             cout<<"|";
     }
@@ -133,7 +136,7 @@ int regMov(char movimientos[],char simbolo,int mov){
 //Jugar de forma automatica
 //Reglas de comportamiento
 /*
--IA siempre es primer movimiento (primer movimiento = modo ataque)
+-IA siempre es primer movimiento
 -El 2do jugador tendra movimientos random (aka otro jugador)
 -La IA seleccionara su movimiento segun lo siguiente (Prioridad a->b->c->d y dentro ese el orden en que estan escritas las reglas):
 a)Contraataque
@@ -142,25 +145,11 @@ a)Contraataque
 b)Centro
     Tomarlo en el primer turno o cuando se de la oportunidad
 c)Esquina
-    Modo ataque exclusivo(?) //Caso WIN del diagonal casi asegurado
-        Cuando sea nuestro 2do turno, el otro jugador haya jugado esquina en su 1er turno y tengamos el centro
-            en este caso jugamos la esquina opuesta al del otro jugador
-                en caso de que en el sig turno del otro jugador juegue un borde entonces jugamos la esquina opuesta a ese borde
-                y tenemos WIN asegurada (4 de 6 de las casillas libres lo asegura)
-                Sino entonces fallo la asegurada y seguimos jugando (Activar bandera de win diagonal fallada)
-    Cuando el otro jugador haya jugado borde y haya fallado el "WIN de linea casi asegurado"
-        en este caso jugamos una esquina adyacente al movimiento del otro jugador
+    Cuando el otro jugador haya jugado jugamos una esquina adyacente a su movimiento dando prioridad a la casilla con el menor numero segun la enumeracion del tablero
 d)Borde
-    Modo ataque exclusivo(?) //Caso WIN de linea casi asegurado
-        Cuando sea nuestro 2do turno y el otro jugador haya jugado borde en su 1ro y tengamos el centro
-            en este caso jugamos el borde opuesto al del 1er jugador
-                en caso de que en el sig turno del otro jugador juegue un borde entonces jugamos la esquina adyacente a una pieza nuestra
-                y tenemos WIN asegurada (2 de 6 de las casillas libres lo asegura)
-                Sino entonces fallo la asegurada y seguimos jugando (Activar bandera de win linea fallada)
-    Cuando el 1er jugador haya jugado esquina
-        en este caso jugamos un borde adyacente al movimiento del 1er jugador
+    Cuando el otro jugador haya jugado esquina jugamos un borde adyacente a su movimiento dando prioridad a la casilla con el menor numero segun la enumeracion del tablero
 */
-//Lista de movimientos de la IA (o cpu no se como llamarle pero la funcion dira cpu)
+//Lista de movimientos de la IA
 int cpuMov(char movimientos[],char simbolo,int movAnt,int turno,char simboloContr){
     int mov=-1;
     mov = oporWin(movimientos,simbolo); //Checa por una Win
@@ -181,10 +170,10 @@ int cpuMov(char movimientos[],char simbolo,int movAnt,int turno,char simboloCont
     return mov;
 }
 
-//Checa por una oportunidad de ganar- Retorna posMatriz de la casilla para ganar o -1 si no la hay (Esta madre se convirtio en contraataque sin querer xd)
+//Checa por una oportunidad de ganar- Retorna posMatriz de la casilla para ganar o -1 si no la hay (Contraataque)
 int oporWin(char movimientos[],char simbolo){
     int contSim=0,contVac=0,posVac=-1;
-    //Checa el tablero en busca de oportunidades de ganar(?)
+    //Checa el tablero en busca de oportunidades de ganar
     //Recorre el tablero contando nuestros simbolos y espacios en blanco, si llega a 2 simbolos y 1 blanco es win sino cont=0 y sig linea
     for(int i=0;i<9;i++){ //Busca en horizontal
         if(movimientos[i]=='~'){ //Checa si es espacio en blanco
@@ -234,7 +223,7 @@ int oporWin(char movimientos[],char simbolo){
         }
     }
 
-    for(int i=0;i<9;i+=4){ //Busca en diagonal ascendente (?)
+    for(int i=0;i<9;i+=4){ //Busca en diagonal ascendente (1-5-9)
         if(movimientos[i]=='~'){ //Checa si es espacio en blanco
                 contVac++;
                 posVac=i;
@@ -249,7 +238,7 @@ int oporWin(char movimientos[],char simbolo){
     contSim=0;
     contVac=0;
 
-    for(int i=2;i<7;i+=2){ //Busca en diagonal descendente (?) (No se me ocurrio una forma de automatizar jeje)
+    for(int i=2;i<7;i+=2){ //Busca en diagonal descendente (7-5-3)
         if(movimientos[i]=='~'){ //Checa si es espacio en blanco
                 contVac++;
                 posVac=i;
@@ -264,23 +253,17 @@ int oporWin(char movimientos[],char simbolo){
     return -1;
 }
 
-//Centro (Nada que decir se explica solo xd)
+//Centro (Agarra el centro cuando esta disponible)
 int centro(char movimientos[]){
-    if(movimientos[4]=='~')
+    if(movimientos[4]=='~') //Checa si el centro esta vacio
         return 4;
     return -1;
 }
 
 //Si se cumple la condicion jugamos una esquina sino no
 int esquina(char movimientos[], int movAnt, int turno){
-    //Dependiendo del movimiento anterior y el turno actual se juega de una forma u otra
-    //Caso WIN del diagonal
-    /*if(turno<3)
-        if((movAnt+1)%2 && movAnt!=5){ //Checa si es impar(esquina) y que no sea el centro(que tambien es impar)
-
-        }
-    else*/
-        if(!((movAnt+1)%2)) //Checa si es par(borde)
+    //Dependiendo del movimiento anterior se evalua que esquina se juega o si no se juega esquina
+        if(!((movAnt+1)%2)) //Checa si es par(borde) el ultimo movimiento en el tablero
             switch (movAnt){
             case 1:
                 if(movimientos[0]=='~')
@@ -310,42 +293,35 @@ int esquina(char movimientos[], int movAnt, int turno){
     return -1;
 }
 
-
 //Si se cumple la condicion jugamos un borde sino no
 int borde(char movimientos[], int movAnt, int turno){
-    //Dependiendo del movimiento anterior y el turno actual se juega de una forma u otra
-    //Caso WIN del diagonal
-    /*if(turno<3)
-        if((movAnt+1)%2 && movAnt!=5){ //Checa si es impar(esquina) y que no sea el centro(que tambien es impar)
-
+    //Dependiendo del movimiento anterior se evalua que borde se juega o si no se juega borde
+    if((movAnt+1)%2) //Checa si es impar(esquina) el ultimo movimiento en el tablero
+        switch (movAnt){
+        case 0:
+            if(movimientos[1]=='~')
+                return 1;
+            if(movimientos[3]=='~')
+                return 3;
+            break;
+        case 2:
+            if(movimientos[1]=='~')
+                return 1;
+            if(movimientos[5]=='~')
+                return 5;
+            break;
+        case 6:
+            if(movimientos[3]=='~')
+                return 3;
+            if(movimientos[7]=='~')
+                return 7;
+            break;
+        case 8:
+            if(movimientos[5]=='~')
+                return 5;
+            if(movimientos[7]=='~')
+                return 7;
+            break;
         }
-    else*/
-        if((movAnt+1)%2) //Checa si es impar(esquina)
-            switch (movAnt){
-            case 0:
-                if(movimientos[1]=='~')
-                    return 1;
-                if(movimientos[3]=='~')
-                    return 3;
-                break;
-            case 2:
-                if(movimientos[1]=='~')
-                    return 1;
-                if(movimientos[5]=='~')
-                    return 5;
-                break;
-            case 6:
-                if(movimientos[3]=='~')
-                    return 3;
-                if(movimientos[7]=='~')
-                    return 7;
-                break;
-            case 8:
-                if(movimientos[5]=='~')
-                    return 5;
-                if(movimientos[7]=='~')
-                    return 7;
-                break;
-            }
     return -1;
 }
