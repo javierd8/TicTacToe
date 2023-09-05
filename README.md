@@ -5,8 +5,9 @@ UACJ Inteligencia Artificial - Busqueda Semi-informada (TicTacToe)
 ***Reglas de comportamiento***
 - IA siempre es primer movimiento  
 - El 2do jugador tendra movimientos random (aka otro jugador)  
-- La IA seleccionara su movimiento segun lo siguiente (Prioridad a->b->c->d)
-  - Contraataque  
+- La IA seleccionara su movimiento segun lo siguiente
+- > (Prioridad: Contraataque -> Centro -> Esquina -> Borde)
+  - Contraataque   
     - Tomar una WIN cuando se tenga la oportunidad
     - Evitar un WIN del otro jugador en su sig turno (aka bloquearlo)
   - Centro  
